@@ -1,0 +1,6 @@
+MemoGen: third-party files
+==========================
+vendor/pdf-lib.min.js   pdf-lib 1.17.1, MIT License, (c) Andrew Dillon. Same file PackList uses.
+                        Bundles tslib (Microsoft, Apache-2.0 / 0BSD; notice kept in the file header).
+                        https://github.com/Hopding/pdf-lib
+LICENSE-lucide.txt      covers the inline icon sprite in index.html (Lucide, ISC).

@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>MemoGen &mdash; AR 25-50 Memorandums</title>
+<link rel="icon" href="memogen.ico">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="styles.css">
+<script src="vendor/pdf-lib.min.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false"><!-- Lucide (ISC license), bundled locally; notice in LICENSE-lucide.txt -->
+<defs>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></symbol>
+<symbol id="i-hard-drive" viewBox="0 0 24 24"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></symbol>
+<symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-circle-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+<symbol id="i-undo-2" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-square-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></symbol>
+<symbol id="i-trash-2" viewBox="0 0 24 24"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+<symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></symbol>
+<symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+<symbol id="i-settings-2" viewBox="0 0 24 24"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></symbol>
+<symbol id="i-book-open" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+<symbol id="i-bold" viewBox="0 0 24 24"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></symbol>
+<symbol id="i-italic" viewBox="0 0 24 24"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+</defs></svg>
+<div class="topwrap">
+<header class="top">
+  <div class="brand">
+    <div><h1>MEMOGEN</h1><p id="subline">AR 25-50 memorandums</p></div>
+    <div class="hbtns">
+      <button type="button" class="cmdbtn" id="newBtn" ><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg><span>New memo</span></button>
+      <button type="button" class="cmdbtn fillbtn" id="fillBtn" hidden aria-keyshortcuts="Alt+N" title="Go to the next [bracketed] fill-in (Alt+N; Alt+Shift+N goes back)"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pencil"></use></svg><span id="fillCount"></span></button>
+      <div class="menu">
+        <button type="button" class="cmdbtn p" id="exportBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-download"></use></svg><span>Export</span><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-down"></use></svg></button>
+        <div class="menu-body" id="exportMenu" role="menu" aria-labelledby="exportBtn" hidden>
+          <button type="button" role="menuitem" data-export="docx">Word document (your template)</button>
+          <button type="button" role="menuitem" data-export="pdf">PDF, ready for CAC signature</button>
+          <button type="button" role="menuitem" data-export="print">Print</button>
+          <button type="button" role="menuitem" data-export="json">Back up saved items (JSON)</button>
+          <button type="button" role="menuitem" data-export="import">Restore saved items</button>
+        </div>
+      </div>
+      <button type="button" id="saveState" class="syncbtn savepill idle" aria-haspopup="dialog" title="Nothing you type is stored. Only what you save with a Save button is kept."><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-eye-off"></use></svg><span class="stext">Memo text is never saved</span></button>
+      <span class="sr" id="saveLive" role="status" aria-live="polite"></span>
+      <button type="button" class="themebtn" id="themeBtn" role="switch" aria-checked="true" aria-label="Dark theme"><span class="knob" aria-hidden="true"></span><span class="lbl">Dark theme</span><span class="state" id="themeState">on</span></button>
+    </div>
+  </div>
+</header>
+<div class="tabbar"><div class="tablist" role="tablist" aria-label="MemoGen views" id="tabs">
+  <button type="button" role="tab" id="tab-compose" data-view="compose" aria-controls="view-compose" aria-selected="true" aria-keyshortcuts="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-square-pen"></use></svg><span>Compose</span></button>
+  <button type="button" role="tab" id="tab-saved" data-view="saved" aria-controls="view-saved" aria-selected="false" tabindex="-1" aria-keyshortcuts="2"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg><span>Saved</span></button>
+  <button type="button" role="tab" id="tab-rules" data-view="rules" aria-controls="view-rules" aria-selected="false" tabindex="-1" aria-keyshortcuts="3"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book-open"></use></svg><span>AR 25-50</span></button>
+  <span class="tabind" aria-hidden="true"></span>
+</div></div>
+<nav class="workflow" aria-label="Memo workflow">
+  <button type="button" class="cmdbtn" id="jumpBtn" aria-haspopup="dialog" aria-controls="jumpDialog" aria-keyshortcuts="Control+k Meta+k">Jump to<span class="desktop-key"><kbd>Ctrl K</kbd></span></button>
+  <button type="button" class="cmdbtn" id="reviewBtn" aria-keyshortcuts="Alt+p">Preview &amp; checks <span id="reviewCount" class="count"></span></button>
+  <button type="button" class="cmdbtn helpbtn" id="helpBtn" aria-label="Keyboard shortcuts" aria-haspopup="dialog" aria-controls="shortcutDialog">?</button>
+</nav>
+</div>
+
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+<input type="file" id="sealInput" accept="image/png,image/jpeg" hidden>
+
+<main id="main">
+<div class="flag" id="syncBanner" role="status" hidden>
+  <span id="syncMsg"></span>
+  <div class="row" style="margin-top:8px"><button type="button" class="b" id="syncAlt" hidden><span id="syncAltLabel"></span></button><button type="button" class="b" id="syncDismiss">Dismiss</button></div>
+</div>
+
+<!-- ============ COMPOSE ============ -->
+<section id="view-compose" class="view active" role="tabpanel" aria-labelledby="tab-compose">
+  <div class="compose">
+    <form class="editor" id="memoForm" novalidate autocomplete="off">
+      <div class="card" id="section-template">
+        <div class="chead tight"><h3>Template</h3><span class="nosave"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-eye-off"></use></svg>Nothing you type here is saved</span></div>
+        <div class="fields"><div class="field wide"><label for="tplPick">Start from</label><p class="hint">Put [brackets] around anything to fill in each time, like [DATE]. MemoGen counts them, Alt+N goes to the next one, and it asks before you export a memo with any left.</p><select id="tplPick"></select></div></div>
+        <div class="row" style="margin-top:12px"><button type="button" class="b" id="saveTpl"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save as template</button><button type="button" class="b" id="updateTpl" hidden>Update <span id="updateTplName"></span></button></div>
+      </div>
+
+      <div class="card" id="section-heading">
+        <h3>Heading</h3>
+        <div class="fields">
+          <div class="field wide"><label for="m_kind">Memo type</label><p class="hint" id="kindHint"></p><select id="m_kind" data-m="kind"></select></div>
+          <div class="field wide only" data-kinds="mfr"><label class="check"><input type="checkbox" id="m_letterhead" data-m="letterhead"> Use letterhead on this MFR</label><p class="hint">AR 25-50 figure 2-17 calls for plain white paper.</p></div>
+          <div class="field wide lh-only"><label for="m_office">Letterhead</label><select id="m_office" data-m="officeId"></select></div>
+          <div class="field"><label for="m_symbol">Office symbol</label><input id="m_symbol" data-m="officeSymbol"></div>
+          <div class="field"><label for="m_record">ARIMS record number</label><input id="m_record" data-m="record" placeholder="25-50a"></div>
+          <div class="field"><label for="m_date">Date</label><div class="row nowrap"><input type="date" id="m_date" data-m="date"><button type="button" class="b" id="todayBtn">Today</button></div><p class="hint after">Leave blank to date it when it is signed.</p></div>
+          <div class="field"><label for="m_dstyle">Date style</label><select id="m_dstyle" data-m="dateStyle"><option value="long">13 March 2020</option><option value="short">13 Mar 20</option></select></div>
+          <div class="field"><label for="m_susp">Suspense date (optional)</label><input type="date" id="m_susp" data-m="suspense"></div>
+        </div>
+      </div>
+
+      <div class="card" id="cuiCard">
+        <h3>CUI marking</h3>
+        <label class="check"><input type="checkbox" id="m_cuiOn" data-m="cui.on"> This memo contains CUI: mark it</label>
+        <p class="hint after">Adds "CUI" at the top and bottom of every page and the designation indicator at the bottom of page 1, lower right. AR 25-50 para 1-22d points to DoDI 5200.48 for these marks.</p>
+        <div id="cuiFields" hidden>
+          <div class="fields">
+            <div class="field wide" id="cuiCompField"><label for="m_cuiComp">Controlled by: DoD Component</label><p class="hint">Needed on plain paper only; letterhead already names it.</p><input id="m_cuiComp" data-m="cui.component" placeholder="Department of the Army"></div>
+            <div class="field wide"><label for="m_cuiOffice">Controlled by: office</label><p class="hint">The office that decided this is CUI.</p><input id="m_cuiOffice" data-m="cui.office" placeholder="Unit S2"></div>
+            <div class="field wide"><label for="m_cuiCat">CUI category</label><p class="hint">Abbreviations from the DoD CUI Registry. Information about people is usually PRVCY; personnel files are PERS or MIL.</p>
+              <div class="quick" id="cuiCats" role="group" aria-label="Chosen CUI categories"></div>
+              <div class="row nowrap"><input id="m_cuiCat" list="cuiCatList" placeholder="Type to search, for example PRVCY" autocomplete="off"><button type="button" class="b" id="cuiCatAdd">Add</button></div>
+              <datalist id="cuiCatList"></datalist>
+              <div class="presets" id="cuiCommon"></div>
+            </div>
+            <div class="field"><label for="m_cuiLdc">Limited dissemination control</label><select id="m_cuiLdc" data-m="cui.ldc"></select></div>
+            <div class="field" id="cuiRelField"><label for="m_cuiRel">REL TO USA, then</label><input id="m_cuiRel" data-m="cui.rel" placeholder="FVEY"></div>
+            <div class="field wide"><label for="m_cuiPoc">Designation indicator POC</label><p class="hint" id="cuiPocHint">Leave blank to use the point of contact below.</p><input id="m_cuiPoc" data-m="cui.poc"></div>
+            <div class="field wide"><label class="check"><input type="checkbox" data-m="cui.portion"> Portion mark: (CUI) or (U) on the subject, each paragraph and each roster</label><p class="hint">Optional, but DoD recommends it. Set each paragraph's mark in the Body list.</p></div>
+            <div class="field" id="cuiSubjField"><label for="m_cuiSubj">Subject mark</label><select id="m_cuiSubj" data-m="cui.subject"><option value="U">(U)</option><option value="CUI">(CUI)</option></select></div>
+            <div class="field wide"><label class="check"><input type="checkbox" data-m="cui.cover"> Cover memo: only the enclosures hold CUI</label><p class="hint">Adds "This memorandum is unclassified when the CUI enclosure is removed." at the bottom of page 1.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card only" data-kinds="single multi thru dist exclusive" id="section-address">
+        <h3>Address</h3>
+        <div class="fields">
+          <div class="field wide only" data-kinds="thru"><label for="m_thru">THRU</label><p class="hint">One address per line. Avoid more than two.</p><textarea id="m_thru" data-m="thru" rows="2"></textarea></div>
+          <div class="field wide only" data-kinds="single multi thru exclusive"><label for="m_to"><span id="toLabel">MEMORANDUM FOR</span></label><p class="hint" id="toHint"></p><textarea id="m_to" data-m="to" rows="2"></textarea></div>
+          <div class="field wide only" data-kinds="dist"><label for="m_dist">Distribution</label><p class="hint">One line each. Leading spaces indent a line.</p><textarea id="m_dist" data-m="distribution" rows="5"></textarea></div>
+        </div>
+      </div>
+
+      <div class="card" id="section-subject">
+        <h3>Subject</h3>
+        <div class="fields">
+          <div class="field wide"><label for="m_subject">Subject</label><input id="m_subject" data-m="subject" spellcheck="true"></div>
+          <div class="field wide"><label for="m_sname">Name after the subject (optional)</label><p class="hint">RANK Last, First MI, as your template has it.</p><input id="m_sname" data-m="subjectName"></div>
+        </div>
+        <p class="tb-count" id="subjectCount"></p>
+      </div>
+
+      <div class="card" id="section-body">
+        <div class="chead tight"><h3>Body</h3><span class="row nowrap"><button type="button" class="iconb bare" id="boldBtn" aria-label="Bold (Ctrl B)" title="Bold (Ctrl B)"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#i-bold"></use></svg></button><button type="button" class="iconb bare" id="italicBtn" aria-label="Italic (Ctrl I)" title="Italic (Ctrl I)"><svg class="ic sm" aria-hidden="true" focusable="false"><use href="#i-italic"></use></svg></button></span></div>
+        <p class="hint">Enter starts the next paragraph. Tab goes one level down, Shift+Tab one level up. Numbers and spacing are automatic. Paste a numbered outline and it keeps its levels.</p>
+        <div id="paraList"></div>
+        <div class="row" style="margin-top:12px"><button type="button" class="b" id="addPara"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg>Add paragraph</button></div>
+      </div>
+
+      <div class="card" id="section-rosters">
+        <div class="chead tight"><h3>Rosters</h3><button type="button" class="b" id="addRoster"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg>Add roster</button></div>
+        <p class="hint">A table such as Rank, Name and DODID, placed under a paragraph or on its own pages as an enclosure. Copy rows in Excel and paste them into any cell. Rows are never saved; a template keeps only the columns.</p>
+        <div id="rosterList"></div>
+      </div>
+
+      <div class="card" id="section-point-of-contact">
+        <div class="chead tight"><h3>Point of contact</h3><button type="button" class="b" id="savePoc"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save POC</button></div>
+        <div class="quick" id="pocQuick" role="group" aria-label="Saved POCs" hidden></div>
+        <p class="hint" id="pocPreview">Added as the last paragraph.</p>
+        <div class="fields">
+          <div class="field"><label for="m_pocname">Rank and name</label><input id="m_pocname" data-m="poc.name" placeholder="RANK Last, First"></div>
+          <div class="field"><label for="m_pocphone">Phone</label><input id="m_pocphone" data-m="poc.phone"></div>
+          <div class="field"><label for="m_pocemail">Email</label><input id="m_pocemail" data-m="poc.email"></div>
+        </div>
+      </div>
+
+      <div class="card" id="section-signature-block">
+        <div class="chead tight"><h3>Signature block</h3><button type="button" class="b" id="saveSigner"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save signature block</button></div>
+        <div class="quick" id="sigQuick" role="group" aria-label="Saved signature blocks" hidden></div>
+        <div class="fields">
+                    <div class="field wide only" data-kinds="single multi thru dist exclusive"><label for="m_auth">Authority line (optional)</label><input id="m_auth" data-m="authority" list="authList" placeholder="FOR THE COMMANDER:"><datalist id="authList"><option value="FOR THE COMMANDER:"></option></datalist></div>
+          <div class="field"><label for="m_sigName">Name</label><input id="m_sigName" data-m="signer.name" placeholder="FIRST MI LAST"></div>
+          <div class="field mil"><label for="m_sigRank">Rank</label><input id="m_sigRank" data-m="signer.rank"></div>
+          <div class="field mil"><label for="m_sigBranch">Branch</label><input id="m_sigBranch" data-m="signer.branch"></div>
+          <div class="field mil"><label for="m_sigComp">Component</label><input id="m_sigComp" data-m="signer.component" placeholder="CAARNG"></div>
+          <div class="field"><label for="m_sigTitle">Position</label><input id="m_sigTitle" data-m="signer.title"></div>
+          <div class="field"><label for="m_sigOrg">Organization (optional)</label><input id="m_sigOrg" data-m="signer.org"></div>
+          <div class="field wide"><label class="check"><input type="checkbox" data-m="signer.civilian"> Civilian signer (name and title only)</label></div>
+          <div class="field wide"><label class="check"><input type="checkbox" data-m="digital"> Digital signature: the PDF gets a signature box and a date box</label></div>
+        </div>
+      </div>
+
+      <div class="card" id="section-second-signature">
+        <div class="chead tight"><h3>Second signature</h3><button type="button" class="b" id="saveCosign" hidden><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save signature block</button></div>
+        <label class="check"><input type="checkbox" id="m_coOn" data-m="cosign.on"> Someone senior to me also signs</label>
+        <div id="cosignFields" hidden>
+          <div class="quick top" id="coQuick" role="group" aria-label="Saved signature blocks for the senior signer" hidden></div>
+          <p class="hint">The senior signer goes on the right and you move to the left (para 2-6c(5)(d)). With a receipt block too, the senior signer is centered below the other two.</p>
+          <div class="fields">
+            <div class="field"><label for="m_coName">Name</label><input id="m_coName" data-m="cosign.signer.name" placeholder="FIRST MI LAST"></div>
+            <div class="field cmil"><label for="m_coRank">Rank</label><input id="m_coRank" data-m="cosign.signer.rank"></div>
+            <div class="field cmil"><label for="m_coBranch">Branch</label><input id="m_coBranch" data-m="cosign.signer.branch"></div>
+            <div class="field cmil"><label for="m_coComp">Component</label><input id="m_coComp" data-m="cosign.signer.component" placeholder="CAARNG"></div>
+            <div class="field"><label for="m_coTitle">Position</label><input id="m_coTitle" data-m="cosign.signer.title"></div>
+            <div class="field"><label for="m_coOrg">Organization (optional)</label><input id="m_coOrg" data-m="cosign.signer.org"></div>
+            <div class="field wide"><label class="check"><input type="checkbox" data-m="cosign.signer.civilian"> Civilian (name and title only)</label></div>
+          </div>
+          <p class="hint after">The date at the top of the memo goes with the senior signer's signature (app F-2h).</p>
+        </div>
+      </div>
+
+      <div class="card" id="section-receipt-acknowledgment">
+        <div class="chead tight"><h3>Receipt acknowledgment</h3><button type="button" class="b" id="saveReceipt" hidden><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save signature block</button></div>
+        <label class="check"><input type="checkbox" id="m_rcvOn" data-m="receipt.on"> The recipient signs to acknowledge receipt</label>
+        <div id="receiptFields" hidden>
+          <div class="quick top" id="rcvQuick" role="group" aria-label="Saved signature blocks for the recipient" hidden></div>
+          <p class="hint" id="receiptPreview"></p>
+          <div class="fields">
+            <div class="field"><label for="m_rcvName">Name</label><input id="m_rcvName" data-m="receipt.signer.name" placeholder="FIRST MI LAST"></div>
+            <div class="field rmil"><label for="m_rcvRank">Rank</label><input id="m_rcvRank" data-m="receipt.signer.rank"></div>
+            <div class="field rmil"><label for="m_rcvBranch">Branch</label><input id="m_rcvBranch" data-m="receipt.signer.branch"></div>
+            <div class="field rmil"><label for="m_rcvComp">Component</label><input id="m_rcvComp" data-m="receipt.signer.component" placeholder="CAARNG"></div>
+            <div class="field"><label for="m_rcvTitle">Position</label><input id="m_rcvTitle" data-m="receipt.signer.title"></div>
+            <div class="field"><label for="m_rcvOrg">Organization (optional)</label><input id="m_rcvOrg" data-m="receipt.signer.org"></div>
+            <div class="field wide"><label class="check"><input type="checkbox" data-m="receipt.signer.civilian"> Civilian (name and title only)</label></div>
+            <div class="field wide"><label for="m_rcvText">Your own wording (optional)</label><p class="hint">Leave blank to use the sentence above. It goes just before the POC paragraph.</p><textarea id="m_rcvText" data-m="receipt.text" rows="2"></textarea></div>
+          </div>
+          <p class="hint after">The memo keeps the issuer's date. The recipient dates their own block.</p>
+        </div>
+      </div>
+
+      <div class="card" id="section-enclosures-and-copies">
+        <h3>Enclosures and copies</h3>
+        <div class="fields">
+          <div class="field wide"><label for="m_encl">Enclosures</label><p class="hint">One per line, in the order the memo mentions them.</p><textarea id="m_encl" data-m="encl.items" rows="2"></textarea><label class="check after"><input type="checkbox" data-m="encl.inBody"> Named in the text, so print only Encl or Encls</label></div>
+          <div class="field wide"><label for="m_cf">Copies furnished (CF)</label><p class="hint">One per line.</p><textarea id="m_cf" data-m="cf" rows="2"></textarea><label class="check after"><input type="checkbox" data-m="cfNoEncl"> None of them get the enclosures (w/o encls)</label></div>
+        </div>
+      </div>
+    </form>
+
+    <aside class="side" aria-label="Preview and checks">
+      <div class="card checks">
+        <div class="chk-head"><h3 id="reviewHeading" tabindex="-1">AR 25-50 check</h3><span class="chk-sum" id="checkSum" role="status" aria-live="polite"></span></div>
+        <ul id="checkList"></ul>
+      </div>
+      <div id="pages" class="pages"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ SAVED ============ -->
+<section id="view-saved" class="view" role="tabpanel" aria-labelledby="tab-saved">
+  <div class="chead"><h2>Saved</h2><p class="asof">The only things MemoGen keeps. Each is stored when you choose Save, never as you type. Memo text is not kept at all.</p></div>
+  <div class="grid">
+    <div class="card"><h3>Templates</h3><ul class="slist" id="tplList"></ul></div>
+    <div class="card"><div class="chead tight"><h3>Points of contact</h3><button type="button" class="b" id="addPoc"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg>Add</button></div><ul class="slist" id="pocList"></ul></div>
+    <div class="card"><div class="chead tight"><h3>Signature blocks</h3><button type="button" class="b" id="addSig"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg>Add</button></div><ul class="slist" id="sigList"></ul></div>
+  </div>
+  <div class="grid">
+    <form class="card" id="officeForm" novalidate autocomplete="off">
+      <div class="chead tight"><h3>Letterhead</h3><span class="row nowrap"><button type="button" class="b" id="newOffice"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"></use></svg>Add</button><button type="button" class="iconb danger" id="delOffice" aria-label="Delete this letterhead" title="Delete this letterhead"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash-2"></use></svg></button></span></div>
+      <div class="fields">
+        <div class="field wide"><label for="officePick">Editing</label><select id="officePick"></select></div>
+        <div class="field wide"><label for="o_name">Short name</label><p class="hint">Only shown in this app.</p><input id="o_name" data-o="name"></div>
+        <div class="field wide"><label for="o_head">Top line</label><input id="o_head" data-o="headline"></div>
+        <div class="field wide"><label for="o_lines">Organization and address</label><p class="hint">One line each, ending with the city, state and nine-digit ZIP.</p><textarea id="o_lines" data-o="lines" rows="3"></textarea></div>
+        <div class="field wide"><label for="o_symbol">Default office symbol</label><input id="o_symbol" data-o="symbol"></div>
+        <div class="field wide"><span class="lbl">Seal</span><div class="seal-row"><img id="sealImg" alt="Seal preview" hidden><div class="row"><button type="button" class="b" id="sealBtn">Replace seal</button><button type="button" class="b" id="sealReset">Use template seal</button></div></div></div>
+      </div>
+      <div class="form-actions"><button type="submit" class="b p"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save letterhead</button></div>
+    </form>
+    <form class="card" id="fmtForm" novalidate autocomplete="off">
+      <h3>Format</h3>
+      <div class="fields">
+        <div class="field"><label for="f_font">Font</label><select id="f_font" data-f="font"></select></div>
+        <div class="field"><label for="f_size">Size</label><select id="f_size" data-f="size"><option value="11">11 point</option><option value="12">12 point</option></select></div>
+        <div class="field wide"><p class="hint">AR 25-50 para 1-19 leaves font and size to your senior leader and recommends 12 point. Your template is set to Arial 11, so choose 11 if that is your unit's standard.</p></div>
+        <div class="field"><label for="f_spaces">Spaces after a sentence</label><select id="f_spaces" data-f="spaces"><option value="2">Two (current rule)</option><option value="1">One (2020 to 2024 rule)</option></select></div>
+        <div class="field wide"><label for="f_kind">New memos start as</label><select id="f_kind" data-f="kind"></select></div>
+        <div class="field wide"><label class="check"><input type="checkbox" data-f="digital"> New memos use a digital signature</label></div>
+      </div>
+      <div class="form-actions"><button type="submit" class="b p"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save format</button></div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ AR 25-50 ============ -->
+<section id="view-rules" class="view" role="tabpanel" aria-labelledby="tab-rules">
+  <div class="chead"><h2>AR 25-50</h2><p class="asof">Preparing and Managing Correspondence, 10 October 2020, administrative revision 4 October 2024. These are short summaries; the regulation governs.</p></div>
+  <div class="card tight" id="ruleTable"></div>
+</section>
+</main>
+
+<dialog id="askDialog" aria-labelledby="askTitle">
+  <form method="dialog" class="dlg ask" novalidate>
+    <h2 id="askTitle"></h2>
+    <p id="askMsg" class="hint"></p>
+    <div class="field"><label class="sr" for="askInput">Name</label><input id="askInput" hidden></div>
+    <div class="dlg-actions">
+      <button type="button" class="b" data-cancel id="askCancel">Cancel</button>
+      <button type="submit" value="ok" class="b p" id="askOk">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="entryDialog" aria-labelledby="entryTitle">
+  <form class="dlg" id="entryForm" novalidate autocomplete="off">
+    <h2 id="entryTitle"></h2>
+    <div class="fields" id="entryPoc">
+      <div class="field wide"><label for="e_pocName">Rank and name</label><input id="e_pocName" data-e="name" placeholder="RANK Last, First"></div>
+      <div class="field"><label for="e_pocPhone">Phone</label><input id="e_pocPhone" data-e="phone"></div>
+      <div class="field"><label for="e_pocEmail">Email</label><input id="e_pocEmail" data-e="email"></div>
+    </div>
+    <div class="fields" id="entrySig">
+      <div class="field wide"><label for="e_sigName">Name</label><input id="e_sigName" data-e="name" placeholder="FIRST MI LAST"></div>
+      <div class="field emil"><label for="e_sigRank">Rank</label><input id="e_sigRank" data-e="rank"></div>
+      <div class="field emil"><label for="e_sigBranch">Branch</label><input id="e_sigBranch" data-e="branch"></div>
+      <div class="field emil"><label for="e_sigComp">Component</label><input id="e_sigComp" data-e="component" placeholder="CAARNG"></div>
+      <div class="field"><label for="e_sigTitle">Position</label><input id="e_sigTitle" data-e="title"></div>
+      <div class="field"><label for="e_sigOrg">Organization (optional)</label><input id="e_sigOrg" data-e="org"></div>
+      <div class="field wide"><label for="e_sigAuth">Authority line (optional)</label><p class="hint">Filled in with this block when you pick it as the main signer.</p><input id="e_sigAuth" data-e="authority" list="authList" placeholder="FOR THE COMMANDER:"></div>
+      <div class="field wide"><label class="check"><input type="checkbox" id="e_sigCiv" data-e="civilian"> Civilian (name and title only)</label></div>
+    </div>
+    <p class="hint err" id="entryErr" role="alert" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="b" data-cancel>Cancel</button>
+      <button type="submit" class="b p"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" hidden role="status" aria-live="polite"><span id="toastMsg"></span><button type="button" class="b" id="toastUndo" hidden><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-undo-2"></use></svg>Undo <kbd>Ctrl Z</kbd></button><button type="button" class="mclose" id="toastX" aria-label="Dismiss"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-x"></use></svg></button></div>
+
+
+<dialog id="jumpDialog" class="pal" aria-labelledby="jumpTitle">
+  <div class="jump-head"><h2 id="jumpTitle">Jump to</h2><button type="button" class="iconb" data-cancel aria-label="Close navigation"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-x"></use></svg></button></div>
+  <label class="sr" for="jumpSearch">Search sections and actions</label>
+  <input id="jumpSearch" class="pal-input" type="search" placeholder="Find a section or action…" autocomplete="off" spellcheck="false">
+  <div id="jumpResults" class="pal-scroll" aria-label="Matching actions"></div>
+  <p class="pal-foot">Tab to an action · Enter to open · Esc to close</p>
+</dialog>
+<dialog id="shortcutDialog" class="sheetd" aria-labelledby="shortcutTitle">
+  <div class="dlg"><div class="sheet-head"><h2 id="shortcutTitle">Keyboard shortcuts</h2><button type="button" class="iconb" data-cancel aria-label="Close keyboard shortcuts"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-x"></use></svg></button></div>
+  <div class="sc"><span class="sc-k"><kbd>Ctrl / ⌘</kbd><kbd>K</kbd></span><span>Find a section or action, even while typing</span></div>
+  <div class="sc"><span class="sc-k"><kbd>Alt</kbd><kbd>P</kbd></span><span>Preview and checks</span></div>
+  <div class="sc"><span class="sc-k"><kbd>Alt</kbd><kbd>N</kbd> / <kbd>Alt</kbd><kbd>Shift</kbd><kbd>N</kbd></span><span>Next / previous fill-in (Compose)</span></div>
+  <div class="sc"><span class="sc-k"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span><span>Compose / Saved / AR 25-50, when not typing</span></div>
+  <div class="sc"><span class="sc-k"><kbd>Ctrl / ⌘</kbd><kbd>Z</kbd></span><span>Undo a library change, when not typing</span></div>
+  <div class="sc"><span class="sc-k"><kbd>?</kbd></span><span>Show this sheet, when not typing</span></div>
+  <p class="hint">Memo text stays only in this page. Export it before closing; these shortcuts do not save it.</p></div>
+</dialog>
+
+<script src="memo-format.js"></script>
+<script src="memo-checks.js"></script>
+<script src="memo-docx.js"></script>
+<script src="memo-pdf.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
