@@ -10,7 +10,10 @@
  * Line counts from the layout engine set Word's keep-together flags, so Word obeys para 2-5c if it reflows. */
 (function (global) {
   const F = () => global.MemoFormat;
-  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // Escapes text for XML and drops the characters XML forbids (control characters, unpaired surrogates): one of those pasted
+  // into a subject would otherwise make Word refuse the file.
+  const esc = (s) => String(s ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '')
+    .replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const tw = (pt) => Math.round(pt * 20);
   const CORE_STORE = '{6C3C8BC8-F283-45AE-878A-BAB7291924A1}';
   const CORE_MAP = "xmlns:ns0='http://purl.org/dc/elements/1.1/' xmlns:ns1='http://schemas.openxmlformats.org/package/2006/metadata/core-properties' ";
@@ -77,13 +80,13 @@
     const para = (inner = '', o) => `<w:p>${ppr(o)}${inner}</w:p>`;
     const blank = (o) => para('', o);
     const exact = (pt) => `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="${Math.max(tw(pt), 14)}" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr></w:pPr></w:p>`;
-    const bound = (alias, xpath, text, o) => `<w:sdt><w:sdtPr>${rp(o)}<w:alias w:val="${alias}"/><w:tag w:val=""/><w:id w:val="${(sdtId += 7)}"/><w:dataBinding w:prefixMappings="${CORE_MAP}" w:xpath="${xpath}" w:storeItemID="${CORE_STORE}"/><w:text/></w:sdtPr><w:sdtContent>${run(text, o)}</w:sdtContent></w:sdt>`;
+    const bound = (alias, xpath, text, o) => `<w:sdt><w:sdtPr>${rp(o)}<w:alias w:val="${alias}"/><w:tag w:val=""/><w:id w:val="${(sdtId += 7)}"/><w:dataBinding w:prefixMappings="${CORE_MAP}" w:xpath="${xpath}" w:storeItemID="${CORE_STORE}"/><w:text/></w:sdtPr><w:sdtContent>${textRun(text, o)}</w:sdtContent></w:sdt>`;   // plain text only: Word refuses a control inside a bound field
     const field = (instr, text) => `<w:r>${rp()}<w:fldChar w:fldCharType="begin"/></w:r><w:r>${rp()}<w:instrText xml:space="preserve"> ${instr} </w:instrText></w:r><w:r>${rp()}<w:fldChar w:fldCharType="separate"/></w:r>${run(text)}<w:r>${rp()}<w:fldChar w:fldCharType="end"/></w:r>`;
 
     /* the values the bound fields show (Word refreshes them from the document properties when it opens the file) */
     const symbol = MF.clean(memo.officeSymbol || '').trim();
     const recordTail = memo.record ? ` (${MF.clean(memo.record).trim()})` : '';
-    const subject = MF.plain(MF.printable(memo.subject, fmt)), name = MF.clean(memo.subjectName || '').trim();
+    const subject = MF.plain(MF.printable(memo.subject, { ...(fmt || {}), noBoxes: true })), name = MF.clean(memo.subjectName || '').trim();
     const symbolRuns = () => `${symbol ? bound('Office Symbol', XP.symbol, symbol, { rs: SYMBOL_STYLE }) : ''}${recordTail ? run(recordTail, { rs: SYMBOL_STYLE }) : ''}`;
     const smark = MF.subjectMark(memo);   // a CUI portion mark, when portion marking is on
     const subjectRuns = () => `${run('SUBJECT: ' + smark)}${subject ? bound('Subject', XP.subject, subject) : ''}${name ? run(' ') + bound('Name', XP.name, name) : ''}`;
@@ -207,7 +210,7 @@
       const fDefault = addPart('footer-encl.xml', 'footer', `${fOpen}${hair()}${banner(false)}</w:ftr>`);
       const enclSect = (fFirst) => `<w:sectPr><w:headerReference w:type="default" r:id="${hDefault}"/><w:footerReference w:type="default" r:id="${fDefault}"/><w:headerReference w:type="first" r:id="${hFirst}"/><w:footerReference w:type="first" r:id="${fFirst}"/><w:type w:val="nextPage"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="1440" w:gutter="0"/><w:cols w:space="720"/><w:titlePg/><w:docGrid w:linePitch="360"/></w:sectPr>`;
       // The memo's own section ends on its last paragraph, so no extra line is added to the memo.
-      body[body.length - 1] = body[body.length - 1].replace('</w:pPr>', `${sect}</w:pPr>`);
+      body[body.length - 1] = body[body.length - 1].replace('</w:pPr>', () => `${sect}</w:pPr>`);
       encls.forEach((t, k) => {
         const fFirst = addPart(`footer-encl-${k + 1}.xml`, 'footer', `${fOpen}<w:p>${ppr({ style: 'Footer', spacing: `<w:spacing w:before="${lineTw}"/>`, jc: 'right' })}${run(t.mark)}</w:p>${banner(false)}</w:ftr>`);
         body.push(para(run(t.title, { b: true }), { keepNext: true, spacing: `<w:spacing w:before="0" w:after="${lineTw}"/>`, jc: 'center' }));
@@ -239,7 +242,7 @@
       const p0 = hdr2.slice(hdr2.indexOf('<w:p '), hdr2.indexOf('</w:p>') + 6);
       const headline = String(office?.headline ?? 'DEPARTMENT OF THE ARMY');
       // The template's 13 point setting sits on the seal's run, so its headline falls back to 8 point; the regulation's figures show it larger.
-      first = p0.replace(/<w:r(?: [^>]*)?><w:t>Department of the Army<\/w:t><\/w:r>/, `<w:r><w:rPr><w:sz w:val="${lh.headSize * 2}"/><w:szCs w:val="${lh.headSize * 2}"/></w:rPr><w:t>${esc(MF.clean(headline))}</w:t></w:r>`);
+      first = p0.replace(/<w:r(?: [^>]*)?><w:t>Department of the Army<\/w:t><\/w:r>/, () => `<w:r><w:rPr><w:sz w:val="${lh.headSize * 2}"/><w:szCs w:val="${lh.headSize * 2}"/></w:rPr><w:t>${esc(MF.clean(headline))}</w:t></w:r>`);
       used += headline.trim() ? lh.headLH : 0;
       MF.splitLines(office?.lines).forEach((t) => { first += `<w:p><w:pPr><w:pStyle w:val="ALLCAPS"/></w:pPr><w:r><w:t xml:space="preserve">${esc(MF.clean(t))}</w:t></w:r></w:p>`; used += lh.lineLH; });
     }
@@ -272,13 +275,14 @@
     set('word/numbering.xml', num.slice(0, a0) + blk + num.slice(a1));
 
     /* document properties feed the bound fields */
-    const setProp = (xml, tag, v) => xml.replace(new RegExp(`<${tag}>[\\s\\S]*?</${tag}>|<${tag}/>`), `<${tag}>${esc(v)}</${tag}>`);
+    // Replacements are functions throughout, so "$&" or "$`" typed in a subject stays text instead of pasting in part of the file.
+    const setProp = (xml, tag, v) => xml.replace(new RegExp(`<${tag}>[\\s\\S]*?</${tag}>|<${tag}/>`), () => `<${tag}>${esc(v)}</${tag}>`);
     let core = part('docProps/core.xml');
     const title = MF.plain(MF.subjectText(memo)) || 'Memorandum';
     core = setProp(core, 'dc:title', title); core = setProp(core, 'dc:subject', subject); core = setProp(core, 'dc:description', name); core = setProp(core, 'cp:contentStatus', symbol);
     core = core.replace(/(<dcterms:modified[^>]*>)[^<]*/, `$1${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}`);
     set('docProps/core.xml', core);
-    set('docProps/app.xml', part('docProps/app.xml').replace(/<vt:lpstr>NGCA-INF-OP<\/vt:lpstr>/, `<vt:lpstr>${esc(title)}</vt:lpstr>`));
+    set('docProps/app.xml', part('docProps/app.xml').replace(/<vt:lpstr>NGCA-INF-OP<\/vt:lpstr>/, () => `<vt:lpstr>${esc(title)}</vt:lpstr>`));
 
     /* the template points at a .dotx in one person's Downloads folder; a memo should not carry that path */
     set('word/settings.xml', part('word/settings.xml').replace(/<w:attachedTemplate [^>]*\/>/, ''));

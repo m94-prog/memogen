@@ -44,7 +44,12 @@
     if (w === undefined) { try { w = embedder(name).widthOfTextAtSize(ch, 1000); } catch { w = null; } t.set(ch, w); }
     return w;
   }
-  const SUBS = { '‐': '-', '‑': '-', '‒': '-', '−': '-', ' ': ' ', ' ': ' ', ' ': ' ', ' ': ' ', '​': '', '﻿': '', '\t': ' ' };
+  const SUBS = { '‐': '-', '‑': '-', '‒': '-', '−': '-', ' ': ' ', ' ': ' ', ' ': ' ', ' ': ' ', '​': '', '﻿': '', '\t': ' ',
+    // Invisible characters text pasted from Word or a web page can carry: line breaks Word copies as vertical tab or line separator
+    // become spaces, and the other control characters are dropped instead of printing as "?".
+    '\u000B': ' ', '\u000C': ' ', '\u2028': ' ', '\u2029': ' ', '\r': '', '\u0085': ' ' };
+  for (let c = 0; c < 32; c++) if (c !== 10) SUBS[String.fromCharCode(c)] ??= '';
+  SUBS['\u007F'] = '';
   // Only what the standard fonts can draw gets through; anything else shows as "?" in both the preview and the PDF.
   function clean(s) {
     let out = '';
@@ -55,7 +60,9 @@
     }
     return out;
   }
-  const fontName = (F, fr) => F[fr?.b && fr?.i ? 'bi' : fr?.b ? 'b' : fr?.i ? 'i' : 'r'];
+  // Capitals can need a letter the fonts lack (the micro sign µ becomes Greek capital mu), so clean after changing case.
+  const upper = (s) => clean(String(s ?? '').toUpperCase());
+  const fontName =(F, fr) => F[fr?.b && fr?.i ? 'bi' : fr?.b ? 'b' : fr?.i ? 'i' : 'r'];
   function widthOf(F, size, text, fr) {
     const n = fontName(F, fr); let w = 0;
     for (const c of text) w += glyph(n, c === NBSP ? ' ' : c) ?? 0;
@@ -78,8 +85,10 @@
   const keepDates = (s) => s.replace(DATE_RE, `$1${NBSP}$2${NBSP}$3`);
   // "[ ]" becomes a checkbox. It and a blank of three or more underscores (for initials) stay with the word after them, so a line
   // never ends on a box or a blank.
+  // fmt.noBoxes keeps "[ ]" as typed: the subject is a field bound to the Word file's properties, and Word refuses a file with a
+  // checkbox inside one (a box in a subject line has no use anyway).
   const boxes = (s) => String(s ?? '').replace(/\[ \]/g, BOX);
-  function prep(text, fmt) { return keepDates(spaceSentences(clean(boxes(text)).trim(), fmt.spaces === 1 ? 1 : 2)).replace(/(☐|_{3,}) /g, `$1${NBSP}`); }
+  function prep(text, fmt) { return keepDates(spaceSentences(clean(fmt.noBoxes ? String(text ?? '') : boxes(text)).trim(), fmt.spaces === 1 ? 1 : 2)).replace(/(☐|_{3,}) /g, `$1${NBSP}`); }
 
   // Inline emphasis (1-32): **bold**, *italic*, ***both***. Anything unmatched stays as typed.
   function parseInline(s) {
@@ -251,7 +260,7 @@
     const pages = []; let page = null, y = 0, fresh = false;
 
     const text = (x, top, fr, o = {}) => page.items.push({ k: 't', x, y: top, s: o.s || S, lh: o.lh || LH, f: o.f || fmt.font, fr: typeof fr === 'string' ? [{ t: fr }] : fr, ...(o.body ? { body: true } : {}) });
-    const wrapPlain = (s, firstW = TEXT_W, restW = TEXT_W) => wrap(F, S, parseInline(prep(s, fmt)), firstW, restW);
+    const wrapPlain = (s, firstW = TEXT_W, restW = TEXT_W, f = fmt) => wrap(F, S, parseInline(prep(s, f)), firstW, restW);
     /* CUI: the designation indicator sits at the bottom of page 1, lower right, with a blank line above it; a cover memo's statement
      * goes above it at the left margin. Both take room from page 1's text, as Word's first-page footer does. */
     const DLH = DI_SIZE * 1.15, diW = RIGHT - SIG_X;
@@ -266,7 +275,7 @@
     const room = () => Math.floor((limit() - y + 0.01) / LH);
 
     const symbolLine = clean(`${memo.officeSymbol || ''}${memo.record ? ` (${memo.record})` : ''}`.trim());
-    const subjectLines = wrapPlain(`SUBJECT: ${subjectMark(memo)}${subjectText(memo)}`);
+    const subjectLines = wrapPlain(`SUBJECT: ${subjectMark(memo)}${subjectText(memo)}`, TEXT_W, TEXT_W, { ...fmt, noBoxes: true });
 
     // kind: 'first' (page 1), 'cont' (a memo continuation page), 'encl' and 'enclCont' (an enclosure roster's pages, plain paper)
     function newPage(kind = 'cont') {
@@ -287,13 +296,13 @@
       if (office?.seal) page.items.push({ k: 'img', x: SEAL.x, y: SEAL.y, w: SEAL.size, h: SEAL.size, src: office.seal });
       else page.items.push({ k: 'seal', x: SEAL.x, y: SEAL.y, w: SEAL.size, h: SEAL.size });
       let ly = LETTERHEAD.top;
-      const head = clean(office?.headline ?? 'DEPARTMENT OF THE ARMY').toUpperCase();
+      const head = upper(office?.headline ?? 'DEPARTMENT OF THE ARMY');
       const center = (t, size, lh) => {
         const fr = [{ t, b: true }], lw = widthOf(FL, size, t, fr[0]);
         text((PAGE_W - lw) / 2, ly, fr, { s: size, lh, f: 'arial' }); ly += lh;
       };
       if (head) center(head, LETTERHEAD.headSize, LETTERHEAD.headLH);
-      splitLines(office?.lines).forEach((t) => center(clean(t).toUpperCase(), LETTERHEAD.lineSize, LETTERHEAD.lineLH));
+      splitLines(office?.lines).forEach((t) => center(upper(t), LETTERHEAD.lineSize, LETTERHEAD.lineLH));
       y = SEAL_BOTTOM + LH;                          // 2-4a(1): office symbol on the second line below the seal
     } else y = IN;
 
@@ -344,7 +353,7 @@
       return { id: p.id, lines };
     });
 
-    const auth = memo.kind === 'mfr' ? '' : clean(memo.authority || '').trim().toUpperCase();
+    const auth = memo.kind === 'mfr' ? '' : upper(memo.authority || '').trim();
     const encl = enclosureLines({ ...memo.encl, items: enclosureItems(memo).join('\n') });
     const close = closingPlan();
     const closeNeed = close.lastRow;   // line steps from the last line of text to the last line of the closing
@@ -509,7 +518,7 @@
         const lead = raw.match(/^\s*/)[0].length;
         wrapPlain(raw, TEXT_W - lead * w(' ')).forEach((ln) => items.push({ fr: ln.fr, indent: lead * w(' ') }));
       });
-      if (room() < 3) newPage();
+      if (room() < Math.min(3, items.length)) newPage();   // the heading never alone; a one-office list needs only its two lines
       flowLines(items);
     }
     const cf = splitLines(memo.cf);
@@ -597,7 +606,7 @@
       return { grid, boxes, lastRow: last };
     }
     function signatureLines(s = {}, width = RIGHT - SIG_X) {
-      const name = clean(s.name || '').trim().toUpperCase();
+      const name = upper(s.name || '').trim();
       const lines = [];
       if (name) lines.push({ fr: [{ t: name }] });
       if (!s.civilian) {   // 6-4c: name, then rank and branch, then title. 6-5c(11): a Guard designation such as CAARNG follows the branch
