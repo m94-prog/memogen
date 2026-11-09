@@ -346,7 +346,9 @@
     setPath(memo, key, fieldVal(el));
     if (key === 'officeId') { const o = officeOf(memo); if (!memo.officeSymbol.trim()) { memo.officeSymbol = o.symbol || ''; $('#m_symbol').value = memo.officeSymbol; } }
     if (['kind', 'letterhead', 'signer.civilian', 'receipt.on', 'receipt.signer.civilian', 'cosign.on', 'cosign.signer.civilian'].includes(key) || key.startsWith('cui.') || key.startsWith('poc.')) applyKind();
-    if (key === 'cui.on' && memo.cui.on && !String(memo.cui.office).trim()) { memo.cui.office = officeOf(memo).name || ''; $('#m_cuiOffice').value = memo.cui.office; }
+    // A fill-in, not the letterhead's name: that name is only shown in this app ("Generic letterhead" on the public copy) and is
+    // seldom the office that decided this is CUI, so the counter and export guard catch it until it is filled in.
+    if (key === 'cui.on' && memo.cui.on && !String(memo.cui.office).trim()) { memo.cui.office = '[Office]'; $('#m_cuiOffice').value = memo.cui.office; }
     if (key === 'cui.on' || key === 'cui.portion') { renderParas(); renderRosters(); }   // show or hide the portion marks
     if (key.startsWith('poc.') || key.startsWith('signer.') || key.startsWith('receipt.signer.') || key.startsWith('cosign.signer.')) renderQuick();
     touched();
