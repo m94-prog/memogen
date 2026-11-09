@@ -51,6 +51,12 @@
   }
   let lib = (() => { try { const s = JSON.parse(localStorage.getItem(LIB_KEY)); if (s && Array.isArray(s.offices)) return repairLib(s); } catch { /* start clean */ } return freshLib(); })();
   const fmt = () => ({ font: lib.defaults.font, size: +lib.defaults.size, spaces: +lib.defaults.spaces });
+  // Templates that come with the page (builtin-templates.js, filled only in the public copy). They are never saved or changed:
+  // Save as template makes your own copy, and a saved template with the same name takes the built-in one's place in the list.
+  const BUILTINS = cleanIds((Array.isArray(window.MemoGenBuiltins) ? window.MemoGenBuiltins : []).filter((t) => t && t.memo && typeof t.name === 'string')
+    .map((t) => ({ id: `builtin-${t.id}`, name: t.name, memo: t.memo })));
+  const builtinsShown = () => BUILTINS.filter((b) => !lib.templates.some((t) => t.name.toLowerCase() === b.name.toLowerCase()));
+  const tplById = (id) => (id && (lib.templates.find((t) => t.id === id) || builtinsShown().find((t) => t.id === id))) || null;
 
   /* ---------------- the memo on the form: memory only ---------------- */
   function newMemo(o = {}) {
@@ -695,8 +701,11 @@
     m.date = ''; m.suspense = ''; return m;
   };
   function renderTemplatePick() {
-    $('#tplPick').innerHTML = `<option value="">Blank memo</option>` + lib.templates.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
-    if (!lib.templates.some((t) => t.id === activeTpl)) activeTpl = '';
+    const opts = (list) => list.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join(''), built = builtinsShown();
+    $('#tplPick').innerHTML = `<option value="">Blank memo</option>`
+      + (built.length && lib.templates.length ? `<optgroup label="Your templates">${opts(lib.templates)}</optgroup>` : opts(lib.templates))
+      + (built.length ? `<optgroup label="Built-in templates">${opts(built)}</optgroup>` : '');
+    if (!tplById(activeTpl)) activeTpl = '';
     $('#tplPick').value = activeTpl;
     const t = lib.templates.find((x) => x.id === activeTpl), b = $('#updateTpl');
     b.hidden = !t; if (t) $('#updateTplName').textContent = t.name;
@@ -708,7 +717,7 @@
   $('#tplPick').addEventListener('change', async (e) => {
     const id = e.target.value;
     if (!(await confirmClear('Switching templates'))) { e.target.value = activeTpl; return; }
-    const t = lib.templates.find((x) => x.id === id);
+    const t = tplById(id);
     memo = t ? fromTemplate(t) : newMemo(); activeTpl = t ? id : ''; exported = true;
     renderCompose();
     const n = fillIns(memo).length;   // straight to the first thing to fill in
@@ -730,7 +739,7 @@
   });
   async function startMemo() {
     if (!(await confirmClear('Starting a new memo'))) return;
-    const t = lib.templates.find((x) => x.id === activeTpl);
+    const t = tplById(activeTpl);
     memo = t ? fromTemplate(t) : newMemo(); exported = true;
     renderCompose(); showView('compose'); $('#m_subject').focus();
   }
